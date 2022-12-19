@@ -18,11 +18,11 @@ const createUser = async ({ username, password, name, location }) => {
       rows: [user],
     } = await client.query(
       `
-        INSERT INTO users(username, password, name, location)
-        VALUES ($1, $2, $3, $4)
-        ON CONFLICT (username) DO NOTHING
-        RETURNING *;
-        `,
+      INSERT INTO users(username, password, name, location)
+      VALUES ($1, $2, $3, $4)
+      ON CONFLICT (username) DO NOTHING
+      RETURNING *;
+      `,
       [username, password, name, location]
     );
     return user;
@@ -44,11 +44,11 @@ const updateUser = async (id, fields = {}) => {
       rows: [user],
     } = await client.query(
       `
-    UPDATE users
-    SET ${setString}
-    WHERE id=${id}
-    RETURNING *;
-  `,
+        UPDATE users
+        SET ${setString}
+        WHERE id=${id}
+        RETURNING *;
+        `,
       Object.values(fields)
     );
 
@@ -65,7 +65,7 @@ const getUserById = async (userId) => {
     } = await client.query(`
         SELECT * FROM users
         WHERE id = ${userId}
-    `);
+        `);
     delete user.password;
     user.posts = await getPostsByUser(userId);
     return user;
@@ -78,9 +78,9 @@ const getUserById = async (userId) => {
 async function getAllPosts() {
   try {
     const { rows: postIds } = await client.query(`
-      SELECT id
-      FROM posts;
-    `);
+        SELECT id
+        FROM posts;
+        `);
 
     const posts = await Promise.all(
       postIds.map((post) => getPostById(post.id))
@@ -98,10 +98,10 @@ const createPost = async ({ authorId, title, content, tags = [] }) => {
       rows: [post],
     } = await client.query(
       `
-        INSERT INTO posts("authorId", title, content)
-        VALUES ($1, $2, $3)
-        RETURNING *;
-        `,
+            INSERT INTO posts("authorId", title, content)
+            VALUES ($1, $2, $3)
+            RETURNING *;
+            `,
       [authorId, title, content]
     );
 
@@ -227,6 +227,13 @@ const getPostById = async (postId) => {
 };
 
 /******************************* Tags ********************************/
+const getAllTags = async () => {
+  const { rows } = await client.query(`
+  SELECT * FROM tags
+  `);
+  return rows;
+};
+
 const createTags = async (tagList) => {
   if (tagList.length === 0) {
     return;
@@ -312,11 +319,7 @@ module.exports = {
   createPost,
   updatePost,
   getAllPosts,
-  getPostsByUser,
   getUserById,
-  createTags,
-  createPostTag,
-  addTagsToPost,
-  getPostById,
   getPostsByTagName,
+  getAllTags,
 };
