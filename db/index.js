@@ -4,6 +4,7 @@ const client = new Client("postgres://localhost:5432/juicebox-dev");
 
 /******************************* Users ********************************/
 
+//function to get all users from database
 const getAllUsers = async () => {
   const { rows } = await client.query(`
     SELECT id, username, name, location, active
@@ -12,6 +13,7 @@ const getAllUsers = async () => {
   return rows;
 };
 
+//creates a new user
 const createUser = async ({ username, password, name, location }) => {
   try {
     const {
@@ -31,14 +33,17 @@ const createUser = async ({ username, password, name, location }) => {
   }
 };
 
+//updates existing user
 const updateUser = async (id, fields = {}) => {
+  //creates a string for the 'SET' keyword
   const setString = Object.keys(fields)
     .map((key, index) => `"${key}"=$${index + 1}`)
     .join(", ");
-
+  //if no setString do nothing
   if (setString.length === 0) {
     return;
   }
+  //if setString do this
   try {
     const {
       rows: [user],
@@ -58,6 +63,7 @@ const updateUser = async (id, fields = {}) => {
   }
 };
 
+//gets specific user based on a userId
 const getUserById = async (userId) => {
   try {
     const {
@@ -66,7 +72,9 @@ const getUserById = async (userId) => {
         SELECT * FROM users
         WHERE id = ${userId}
         `);
+    //deletes the password key from the user object
     delete user.password;
+    //assigns posts key to user object based on the userId
     user.posts = await getPostsByUser(userId);
     return user;
   } catch (error) {
@@ -74,14 +82,35 @@ const getUserById = async (userId) => {
   }
 };
 
+//gets specific user based on username
+const getUserByUsername = async (username) => {
+  try {
+    const {
+      rows: [user],
+    } = await client.query(
+      `
+      SELECT *
+      FROM users
+      WHERE username=$1;
+    `,
+      [username]
+    );
+
+    return user;
+  } catch (error) {
+    throw error;
+  }
+};
 /******************************* Posts ********************************/
+
+//get all posts from database
 async function getAllPosts() {
   try {
     const { rows: postIds } = await client.query(`
         SELECT id
         FROM posts;
         `);
-
+    //maps out each individual post based on the id
     const posts = await Promise.all(
       postIds.map((post) => getPostById(post.id))
     );
@@ -92,6 +121,7 @@ async function getAllPosts() {
   }
 }
 
+//creates new post in database
 const createPost = async ({ authorId, title, content, tags = [] }) => {
   try {
     const {
@@ -104,7 +134,7 @@ const createPost = async ({ authorId, title, content, tags = [] }) => {
             `,
       [authorId, title, content]
     );
-
+    //adds tags to taglist array and then adds tags to the post based on id using taglist array
     const tagList = await createTags(tags);
     return await addTagsToPost(post.id, tagList);
   } catch (error) {
@@ -112,6 +142,7 @@ const createPost = async ({ authorId, title, content, tags = [] }) => {
   }
 };
 
+//updates existing post
 const updatePost = async (postId, fields = {}) => {
   // read off the tags & remove that field
   const { tags } = fields; // might be undefined
@@ -165,6 +196,7 @@ const updatePost = async (postId, fields = {}) => {
   }
 };
 
+//grabs all posts by specific user using userId
 const getPostsByUser = async (userId) => {
   try {
     const { rows: postIds } = await client.query(`
@@ -173,6 +205,7 @@ const getPostsByUser = async (userId) => {
       WHERE "authorId"=${userId};
     `);
 
+    //adds all posts to posts object
     const posts = await Promise.all(
       postIds.map((post) => getPostById(post.id))
     );
@@ -183,6 +216,7 @@ const getPostsByUser = async (userId) => {
   }
 };
 
+//grabs specific post based on postId
 const getPostById = async (postId) => {
   try {
     const {
@@ -194,7 +228,7 @@ const getPostById = async (postId) => {
     `,
       [postId]
     );
-
+    //grabs tags for post where postId and tagId are the same
     const { rows: tags } = await client.query(
       `
     SELECT tags.* FROM tags
@@ -214,10 +248,10 @@ const getPostById = async (postId) => {
     `,
       [post.authorId]
     );
-
+    //adds tags and author keys to post object
     post.tags = tags;
     post.author = author;
-
+    //deletes authorId key from post object
     delete post.authorId;
 
     return post;
@@ -227,6 +261,8 @@ const getPostById = async (postId) => {
 };
 
 /******************************* Tags ********************************/
+
+//gets all tags
 const getAllTags = async () => {
   const { rows } = await client.query(`
   SELECT * FROM tags
@@ -234,6 +270,7 @@ const getAllTags = async () => {
   return rows;
 };
 
+//creates new tag
 const createTags = async (tagList) => {
   if (tagList.length === 0) {
     return;
@@ -263,6 +300,7 @@ const createTags = async (tagList) => {
   }
 };
 
+//adds tags into crossover table to be matched using postId and tagId
 const createPostTag = async (postId, tagId) => {
   try {
     await client.query(
@@ -278,6 +316,7 @@ const createPostTag = async (postId, tagId) => {
   }
 };
 
+//adds tags to post
 const addTagsToPost = async (postId, tagList) => {
   try {
     const createPostTagPromises = tagList.map((tag) =>
@@ -292,6 +331,7 @@ const addTagsToPost = async (postId, tagList) => {
   }
 };
 
+//gets posts based on specific tag names
 const getPostsByTagName = async (tagName) => {
   try {
     const { rows: postIds } = await client.query(
@@ -322,4 +362,5 @@ module.exports = {
   getUserById,
   getPostsByTagName,
   getAllTags,
+  getUserByUsername,
 };

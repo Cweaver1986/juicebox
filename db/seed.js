@@ -10,6 +10,7 @@ const {
   getPostsByTagName,
 } = require("./index");
 
+// drops all tables (if they exist)
 const dropTables = async () => {
   try {
     console.log("Dropping tables");
@@ -28,6 +29,7 @@ const dropTables = async () => {
   }
 };
 
+//creates new tables
 const createTables = async () => {
   try {
     console.log("Building tables");
@@ -70,13 +72,14 @@ const createTables = async () => {
   }
 };
 
+//creates initial users
 async function createInitialUsers() {
   try {
     console.log("Creating users...");
 
-    const glamgal = await createUser({
-      username: "glamgal",
-      password: "soglam",
+    const albert = await createUser({
+      username: "albert",
+      password: "bertie99",
       name: "",
       location: "",
     });
@@ -88,12 +91,13 @@ async function createInitialUsers() {
       location: "",
     });
 
-    const albert = await createUser({
-      username: "albert",
-      password: "bertie99",
+    const glamgal = await createUser({
+      username: "glamgal",
+      password: "soglam",
       name: "",
       location: "",
     });
+
     console.log("Users created!");
   } catch (error) {
     console.error("Error creating users!");
@@ -101,6 +105,7 @@ async function createInitialUsers() {
   }
 }
 
+//creates initial posts
 async function createInitialPosts() {
   try {
     const [albert, sandra, glamgal] = await getAllUsers();
@@ -134,6 +139,7 @@ async function createInitialPosts() {
   }
 }
 
+//calls all functions to rebuild the database
 const rebuildDB = async () => {
   try {
     client.connect();
@@ -148,6 +154,7 @@ const rebuildDB = async () => {
   }
 };
 
+//simple function to test database is working properly
 const testDB = async () => {
   try {
     console.log("Starting to test database...");
