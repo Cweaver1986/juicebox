@@ -12,9 +12,19 @@ postsRouter.use((req, res, next) => {
 postsRouter.get("/", async (req, res, next) => {
   try {
     const allPosts = await getAllPosts();
-    //look more into this to understand =============LOOK HERE LOOK HERE LOOK HERE====
     const posts = allPosts.filter((post) => {
-      return post.active || (req.user && post.author.id === req.user.id);
+      // the post is active, doesn't matter who it belongs to
+      if (post.active) {
+        return true;
+      }
+
+      // the post is not active, but it belogs to the current user
+      if (req.user && post.author.id === req.user.id) {
+        return true;
+      }
+
+      // none of the above are true
+      return false;
     });
 
     res.send({
@@ -86,6 +96,7 @@ postsRouter.patch("/:postId", requireUser, async (req, res, next) => {
   }
 });
 
+//
 postsRouter.delete("/:postId", requireUser, async (req, res, next) => {
   try {
     const post = await getPostById(req.params.postId);

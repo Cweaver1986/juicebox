@@ -17,6 +17,8 @@ usersRouter.get("/", async (req, res) => {
   });
 });
 
+//POST api/users/login
+//login user
 usersRouter.post("/login", async (req, res, next) => {
   const { username, password } = req.body;
 
@@ -51,26 +53,28 @@ usersRouter.post("/login", async (req, res, next) => {
   }
 });
 
+//POST api/users/register
+//registers new user
 usersRouter.post("/register", async (req, res, next) => {
   const { username, password, name, location } = req.body;
 
   try {
     const _user = await getUserByUsername(username);
-
+    //returns early if user exists already
     if (_user) {
       next({
         name: "UserExistsError",
         message: "A user by that username already exists",
       });
     }
-
+    //creates new user
     const user = await createUser({
       username,
       password,
       name,
       location,
     });
-
+    //assigns token to user
     const token = jwt.sign(
       {
         id: user.id,

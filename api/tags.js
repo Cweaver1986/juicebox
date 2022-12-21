@@ -15,17 +15,33 @@ tagsRouter.get("/", async (req, res) => {
     tags,
   });
 });
-//==============LOOK HERE LOOK HERE LOOK HERE=========
-//not passing the error messages correctly, come back
+
+//GET api/tags/:tagName/posts
+//gets posts by tagname
 tagsRouter.get("/:tagName/posts", async (req, res, next) => {
   const { tagName } = req.params;
   try {
-    const posts = await getPostsByTagName(tagName);
-    if (posts) {
-      res.send(posts);
+    const allPosts = await getPostsByTagName(tagName);
+    const posts = allPosts.filter((post) => {
+      // the post is active, doesn't matter who it belongs to
+      if (post.active) {
+        return true;
+      }
+
+      // the post is not active, but it belogs to the current user
+      if (req.user && post.author.id === req.user.id) {
+        return true;
+      }
+
+      // none of the above are true
+      return false;
+    });
+    console.log(posts);
+    if ([posts.id]) {
+      res.send({ posts });
     } else {
       next({
-        name: "NoPostsError",
+        name: "NoPostsTagsError",
         message: "No posts with that tag",
       });
     }

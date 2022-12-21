@@ -223,8 +223,9 @@ const getPostById = async (postId) => {
       rows: [post],
     } = await client.query(
       `
-    SELECT * FROM posts
-    WHERE id = $1;
+      SELECT *
+      FROM posts
+      WHERE id=$1;
     `,
       [postId]
     );
@@ -236,12 +237,12 @@ const getPostById = async (postId) => {
       };
     }
 
-    //grabs tags for post where postId and tagId are the same
     const { rows: tags } = await client.query(
       `
-    SELECT tags.* FROM tags
-    JOIN post_tags ON tags.id=post_tags."tagId"
-    WHERE post_tags."postId"=$1;
+      SELECT tags.*
+      FROM tags
+      JOIN post_tags ON tags.id=post_tags."tagId"
+      WHERE post_tags."postId"=$1;
     `,
       [postId]
     );
@@ -250,16 +251,16 @@ const getPostById = async (postId) => {
       rows: [author],
     } = await client.query(
       `
-    SELECT id, username, name, location
-    FROM users
-    WHERE id=$1;
+      SELECT id, username, name, location
+      FROM users
+      WHERE id=$1;
     `,
       [post.authorId]
     );
-    //adds tags and author keys to post object
+
     post.tags = tags;
     post.author = author;
-    //deletes authorId key from post object
+
     delete post.authorId;
 
     return post;
